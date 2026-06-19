@@ -1,20 +1,38 @@
 def create_chunks(
-        text,
+        pdf_data,
         chunk_size=1000,
         overlap=200
 ):
     chunks =[]
 
-    for i in range(
-        0,
-        len(text),
-        chunk_size - overlap
-    ):
-        chunk = text[i: i+chunk_size]
+    for page_data in pdf_data["pages"]:
+        
+        text= page_data["text"]
 
-        chunks.append({
-            "text": chunk,
-            "chunk_id": len(chunks)
-        })
+        page_num = page_data["page"]
+
+        for i in range(
+            0,
+            len(text),
+            chunk_size-overlap
+        ):
+            
+            chunk_text = text[
+                i:i+chunk_size
+            ]
+
+            chunks.append({
+                "text": chunk_text,
+                "chunk_id":len(chunks),
+
+                "pdf_name":
+                pdf_data["pdf_name"],
+
+                "author":
+                pdf_data["author"],
+
+                "page":
+                page_num
+            })
 
     return chunks

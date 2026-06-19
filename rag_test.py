@@ -10,9 +10,13 @@ from modules.generator import generate_answer
 
 load_dotenv()
 
-text = load_pdf("data/sample.pdf")
+pdf_data = load_pdf(
+    "data/sample.pdf"
+)
 
-chunks = create_chunks(text)
+chunks = create_chunks(
+    pdf_data
+)
 
 embeddings = create_embeddings(chunks)
 
@@ -34,6 +38,18 @@ while True:
         index,
         chunks
     )
+
+    print("\nTop Retrived Chunks\n")
+
+    for score, idx in zip(scores[0], indices[0]):
+        print(f"\nChunk Index: {idx}")
+        print(f"Score: {score:.4f}")
+
+        print(f"PDF: {chunks[idx]['pdf_name']}")
+        print(f"Page: {chunks[idx]['page']}")
+        print(f"Author:{chunks[idx]['author']}")
+
+        print(chunks[idx]["text"][:300])
 
     answer = generate_answer(
         context,
