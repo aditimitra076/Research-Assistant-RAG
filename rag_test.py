@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 
 
-from modules.pdf_loader import load_pdf
+from modules.pdf_loader import load_all_pdfs
 from modules.chunker import create_chunks
 from modules.embedder import create_embeddings
 from modules.vector_store import create_index
@@ -10,8 +10,8 @@ from modules.generator import generate_answer
 
 load_dotenv()
 
-pdf_data = load_pdf(
-    "data/sample.pdf"
+pdf_data = load_all_pdfs(
+    "data"
 )
 
 chunks = create_chunks(

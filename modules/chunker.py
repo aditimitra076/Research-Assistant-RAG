@@ -5,16 +5,16 @@ def create_chunks(
 ):
     chunks =[]
 
-    for page_data in pdf_data["pages"]:
-        
-        text= page_data["text"]
+    for page_data in pdf_data:
+
+        text = page_data["text"]
 
         page_num = page_data["page"]
 
         for i in range(
             0,
             len(text),
-            chunk_size-overlap
+            chunk_size- overlap
         ):
             
             chunk_text = text[
@@ -22,14 +22,16 @@ def create_chunks(
             ]
 
             chunks.append({
+
                 "text": chunk_text,
+
                 "chunk_id":len(chunks),
 
                 "pdf_name":
-                pdf_data["pdf_name"],
+                page_data["pdf_name"],
 
                 "author":
-                pdf_data["author"],
+                page_data["author"],
 
                 "page":
                 page_num
