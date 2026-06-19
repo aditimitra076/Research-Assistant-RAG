@@ -58,3 +58,23 @@ while True:
 
     print("\n==ANSWER==\n")
     print (answer)
+
+    print("\n==SOURCES==\n")
+
+    seen = set()
+
+    for idx in indices[0]:
+
+        source = (
+            chunks[idx]["pdf_name"],
+            chunks[idx]["page"]
+        )
+
+        if source not in seen:
+
+            print(
+                f"{chunks[idx]['pdf_name']}"
+                f"(Page{chunks[idx]['page']})"
+            )
+
+            seen.add(source)
