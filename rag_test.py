@@ -8,19 +8,57 @@ from modules.vector_store import create_index
 from modules.retriever import retrieve_chunks
 from modules.generator import generate_answer
 
+from modules.index_manager import(
+    save_index,
+    load_index
+)
+
 load_dotenv()
 
-pdf_data = load_all_pdfs(
-    "data"
-)
+# pdf_data = load_all_pdfs(
+#     "data"
+# )
 
-chunks = create_chunks(
-    pdf_data
-)
+# chunks = create_chunks(
+#     pdf_data
+# )
 
-embeddings = create_embeddings(chunks)
+# embeddings = create_embeddings(chunks)
 
-index = create_index(embeddings)
+# index = create_index(embeddings)
+
+index, chunks = load_index()
+if index is None:
+
+    print(
+        "Createing new index..."
+    )
+
+    pdf_data = load_all_pdfs(
+        "data"
+    )
+
+    chunks = create_chunks(
+        pdf_data
+    )
+
+    embeddings= create_embeddings(
+        chunks
+    )
+
+    index = create_index(
+        embeddings
+    )
+
+    save_index(
+        index,
+        chunks
+    )
+
+else:
+    print(
+        "Loaded saved index."
+    )
 
 print("System ready")
 
