@@ -23,6 +23,18 @@ from modules.project_chat import(
     chat_with_project
 )
 
+from modules.project_workspace import(
+    open_project
+)
+
+from modules.pdf_uploader import upload_pdf
+
+
+from modules.project_indexer import(
+    rebuild_project_index
+)
+
+
 load_dotenv()
 
 
@@ -59,7 +71,7 @@ while True:
             "\nSelect Project: "
         )
 
-        chat_with_project(
+        open_project(
             selected_project
         )
     
@@ -78,98 +90,9 @@ while True:
         delete_project(
             project_name
         )
-        
+
     elif choice =="4":
 
         break
 
 
-# index, chunks = load_index()
-# if index is None:
-
-#     print(
-#         "Createing new index..."
-#     )
-
-#     pdf_data = load_all_pdfs(
-#         "data"
-#     )
-
-#     chunks = create_chunks(
-#         pdf_data
-#     )
-
-#     embeddings= create_embeddings(
-#         chunks
-#     )
-
-#     index = create_index(
-#         embeddings
-#     )
-
-#     save_index(
-#         index,
-#         chunks
-#     )
-
-# else:
-#     print(
-#         "Loaded saved index."
-#     )
-
-# print("System ready")
-
-# while True:
-
-#     query = input(
-#         "\nAsk any question (or type exit to exit): "
-#     )
-
-#     if query.lower()=="exit":
-#         break
-
-#     context, scores, indices = retrieve_chunks(
-#         query,
-#         index,
-#         chunks
-#     )
-
-#     print("\nTop Retrived Chunks\n")
-
-#     for score, idx in zip(scores[0], indices[0]):
-#         print(f"\nChunk Index: {idx}")
-#         print(f"Score: {score:.4f}")
-
-#         print(f"PDF: {chunks[idx]['pdf_name']}")
-#         print(f"Page: {chunks[idx]['page']}")
-#         print(f"Author:{chunks[idx]['author']}")
-
-#         print(chunks[idx]["text"][:300])
-
-#     answer = generate_answer(
-#         context,
-#         query
-#     )
-
-#     print("\n==ANSWER==\n")
-#     print (answer)
-
-#     print("\n==SOURCES==\n")
-
-#     seen = set()
-
-#     for idx in indices[0]:
-
-#         source = (
-#             chunks[idx]["pdf_name"],
-#             chunks[idx]["page"]
-#         )
-
-#         if source not in seen:
-
-#             print(
-#                 f"{chunks[idx]['pdf_name']}"
-#                 f"(Page{chunks[idx]['page']})"
-#             )
-
-#             seen.add(source)
