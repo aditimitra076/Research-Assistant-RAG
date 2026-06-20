@@ -19,6 +19,10 @@ from modules.project_manager import(
     delete_project
 )
 
+from modules.project_chat import(
+    chat_with_project
+)
+
 load_dotenv()
 
 
@@ -55,8 +59,8 @@ while True:
             "\nSelect Project: "
         )
 
-        print(
-            f"\nSelected project: {selected_project}"
+        chat_with_project(
+            selected_project
         )
     
     elif choice=="3":
@@ -67,13 +71,14 @@ while True:
         for project in projects:
             print(project)
             
-            project_name = input(
-                "\nDelete project: "
-            )
+        project_name= input(
+            "\nDelete Project: "
+        )
 
-            delete_project(
-                project_name
-            )
+        delete_project(
+            project_name
+        )
+        
     elif choice =="4":
 
         break
