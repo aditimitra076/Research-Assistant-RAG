@@ -11,7 +11,7 @@ def retrieve_chunks(
         query,
         index,
         chunks,
-        top_k=10
+        top_k=5
 ):
     
     query_embedding = np.array(
@@ -27,14 +27,28 @@ def retrieve_chunks(
     )
 
 
+    filtered_chunks = []
+
     scores, indices = index.search(
         query_embedding,
         top_k
     )
 
+    # context = "\n\n".join(
+    #     chunks[idx]["text"]
+    #     for idx in indices[0]
+    # )
+
+    # return context, scores, indices
+
+    for score, idx in zip(scores[0], indices[0]):
+
+        if score > 0.45:
+            filtered_chunks.append(
+                chunks[idx]["text"]
+            )
     context = "\n\n".join(
-        chunks[idx]["text"]
-        for idx in indices[0]
+        filtered_chunks
     )
 
     return context, scores, indices

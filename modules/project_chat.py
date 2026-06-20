@@ -52,6 +52,15 @@ def chat_with_project(
             chunks
         )
 
+        #show retrieval score
+
+        for score, idx in zip(scores[0], indices[0]):
+            print(
+                f"{chunks[idx]['pdf_name']}"
+                f"Page{chunks[idx]['page']}"
+                f"Score{score:.4f}"
+            )
+
         answer = generate_answer(
             context,
             query
