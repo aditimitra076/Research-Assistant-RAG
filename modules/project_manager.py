@@ -90,3 +90,14 @@ def get_project_paths(project_name):
         )
 
         return pdfs_path, storage_path
+
+
+
+def project_exists(project_name):
+        
+        return os.path.exists(
+                os.path.join(
+                        PROJECTS_FOLDER,
+                        project_name
+                )
+        )
