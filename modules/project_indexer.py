@@ -36,9 +36,23 @@ def rebuild_project_index(project_name):
         pdfs_path
     )
 
+    if len(pdf_data)==0:
+        print(
+            "No PDFs found."
+        )
+
+        return 
+
     chunks = create_chunks(
         pdf_data
     )
+
+    if len(chunks)== 0:
+        print(
+            "No chunks created."
+        )
+
+        return 
 
     embeddings = create_embeddings(
         chunks
