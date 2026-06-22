@@ -12,12 +12,13 @@ def show_chat(
     )
 
     if st.button(
-        "← Back"
+        "← Back",
+        key = "chat_back"
     ):
         
-        del st.session_state[
-            "chat_project"
-        ]
+        st.session_state[
+            "chat_mode"
+        ] = False
 
         st.rerun()
     st.divider()
@@ -91,9 +92,9 @@ def show_chat(
                 
                 for source in sources:
                     st.write(
-                        sources
+                        source
                     )
-                    
+
         st.session_state.messages.append(
             {
                 "role":"assistant",

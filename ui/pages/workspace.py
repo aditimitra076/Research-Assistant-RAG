@@ -1,5 +1,11 @@
 import streamlit as st
 
+import os
+
+from modules.project_manager import(
+    get_project_paths
+)
+
 from modules.pdf_uploader import (
     upload_pdf
 )
@@ -17,10 +23,15 @@ from pages.chat import(
 def show_workspace(
         project_name
 ):
-    st.header(
-        project_name
+    st.title(
+        f"📁{project_name}"
     )
 
+    st.caption(
+        "Research Workspace"
+    )
+
+    
     if st.button(
         "← Back"
     ):
@@ -32,8 +43,14 @@ def show_workspace(
 
     st.divider()
 
-    st.subheader(
-        "Upload PDF"
+    
+
+    col1, col2 = st.columns(2)
+
+    with col1 :
+
+        st.subheader(
+        "📄Upload Document"
     ) 
 
     uploaded_file = st.file_uploader(
@@ -44,7 +61,9 @@ def show_workspace(
     if(
         uploaded_file
         and
-        st.button("Upload")
+        st.button(
+            "Upload PDF"
+        )
     ):
         
         temp_path = uploaded_file.name
@@ -65,48 +84,87 @@ def show_workspace(
         st.success(
             "PDF uploaded successfully"
         )
-    st.divider()
+    
+    with col2:
 
-    st.subheader(
-        "Index"
-    )
-
-    if st.button(
-        "Rebuild Index"
-    ):
-        
-        success = rebuild_project_index(
-            project_name
+        st.subheader(
+            "⚡Knowledge Base"
         )
 
-        if success:
 
-            st.success(
-                "Index rebuilt"
+        if st.button(
+            "Rebuild Index"
+        ):
+        
+            success = rebuild_project_index(
+                project_name
             )
-        else:
-            st.warning(
-                "No PDFs uploaded in this project."
-            )
+
+            if success:
+
+                st.success(
+                    "Index rebuilt"
+                )
+            else:
+                st.warning(
+                    "No PDFs uploaded in this project."
+                )
 
     st.divider()
 
     st.subheader(
-        "Chat"
+        "Uploaded PDFs"
+    )
+
+    pdfs_path, _ = get_project_paths(
+        project_name
+    )
+
+    pdf_files = []
+
+    if os.path.exists(
+        pdfs_path
+    ):
+        
+        pdf_files = [
+            file
+            for file in os.listdir(
+                pdfs_path
+            )
+            if file.endswith(
+                ".pdf"
+            )
+        ]
+    if not pdf_files:
+        st.info(
+            "No PDFs uploaded yet."
+        )
+    else:
+        for pdf in pdf_files:
+
+            st.markdown(
+                f"📄{pdf}"
+            )
+
+    st.subheader(
+        "💬Chat"
     )
 
     if st.button(
-        "Ask Questions"
+        "Open Chat"
     ):
         
         st.session_state[
-            "chat_project"
-        ] = project_name
-
-        st.session_state[
-            "messages"
-        ]= []
-
+            "chat_mode"
+        ] = True
 
         st.rerun()
 
+    if st.session_state.get(
+        "chat_mode",
+        False
+    ):
+        
+        show_chat(
+            project_name
+        )
