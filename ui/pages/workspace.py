@@ -19,19 +19,77 @@ from pages.chat import(
     show_chat
 )
 
+from modules.index_manager import(
+    load_index
+)
+
+
 
 def show_workspace(
         project_name
 ):
-    st.title(
-        f"📁{project_name}"
+    st.markdown(
+        f"## 📁{project_name}"
     )
 
     st.caption(
         "Research Workspace"
     )
 
+    pdfs_path, storage_path = get_project_paths(
+        project_name
+    )
+
+    pdf_count = 0
+    chunk_count =0
+
+
+    if os.path.exists(
+        pdfs_path
+    ):
+        
+        pdf_count =len(
+            [
+                file
+                for file in os.listdir(
+                    pdfs_path
+                )
+
+                if file.endswith(".pdf")
+            ]
+        )
+
+    index, chunks = load_index(
+        storage_path
+    )
+
+    if chunks:
+        chunk_count = len(
+            chunks
+        )
+
+    col1, col2, col3 = st.columns(3)
     
+
+    with col1:
+        st.metric(
+            "PDFs",
+            pdf_count
+        )
+    with col2:
+        st.metric(
+            "Chunks",
+            chunk_count
+        )
+
+    with col3:
+        st.metric(
+            "Indexed",
+            "Yes" if index else "No"
+        )
+    
+    st.divider()
+
     if st.button(
         "← Back"
     ):
@@ -49,8 +107,8 @@ def show_workspace(
 
     with col1 :
 
-        st.subheader(
-        "📄Upload Document"
+        st.markdown(
+        "###📄Upload Document"
     ) 
 
     uploaded_file = st.file_uploader(
@@ -87,8 +145,8 @@ def show_workspace(
     
     with col2:
 
-        st.subheader(
-            "⚡Knowledge Base"
+        st.markdown(
+            "###⚡Knowledge Base"
         )
 
 
@@ -112,8 +170,8 @@ def show_workspace(
 
     st.divider()
 
-    st.subheader(
-        "Uploaded PDFs"
+    st.markdown(
+        "### 📚 Documents"
     )
 
     pdfs_path, _ = get_project_paths(
@@ -142,12 +200,21 @@ def show_workspace(
     else:
         for pdf in pdf_files:
 
-            st.markdown(
-                f"📄{pdf}"
+            col1, col2 = st.columns(
+                [8,1]
             )
 
-    st.subheader(
-        "💬Chat"
+            with col1:
+                st.write(
+                    f"📄{pdf}"
+                )
+            with col2:
+                st.caption(
+                    "PDF"
+                )
+
+    st.markdown(
+        "###💬Chat"
     )
 
     if st.button(

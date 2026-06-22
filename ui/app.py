@@ -24,12 +24,6 @@ from pages.workspace import(
 )
 
 
-from pages.chat import(
-    show_chat
-)
-
-
-
 st.set_page_config(
     page_title="Research Assistant",
     page_icon ="📚",
@@ -48,15 +42,7 @@ with st.sidebar:
     st.divider()
 
 
-if "chat_project" in st.session_state:
-
-    show_chat(
-        st.session_state[
-            "chat_project"
-        ]
-    )
-
-elif "selected_project" in st.session_state:
+if "selected_project" in st.session_state:
 
     show_workspace(
         st.session_state[

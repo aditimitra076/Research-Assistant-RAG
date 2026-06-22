@@ -7,8 +7,8 @@ from components.rag_engine import(
 def show_chat(
         project_name
 ):
-    st.header(
-        f"💬{project_name}"
+    st.markdown(
+        f"##💬{project_name}"
     )
 
     if st.button(

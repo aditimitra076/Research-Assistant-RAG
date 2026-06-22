@@ -7,6 +7,11 @@ from modules.project_manager import (
     get_project_paths
 )
 
+from modules.index_manager import (
+    load_index
+)
+
+
 def show_projects():
 
     projects = list_projects()
@@ -17,8 +22,8 @@ def show_projects():
 
     total_pdfs = 0
 
-    
     for project in projects:
+
         pdfs_path, _ = get_project_paths(
             project
         )
@@ -26,21 +31,20 @@ def show_projects():
         if os.path.exists(
             pdfs_path
         ):
-            total_pdfs+=len(
+            total_pdfs += len(
                 [
                     file
                     for file in os.listdir(
                         pdfs_path
                     )
-
                     if file.endswith(
                         ".pdf"
                     )
                 ]
             )
 
-
     with st.sidebar:
+
         st.subheader(
             "Statistics"
         )
@@ -57,8 +61,8 @@ def show_projects():
 
         st.divider()
 
-    st.header(
-        "Projects"
+    st.markdown(
+        "## 📚 Projects"
     )
 
     new_project = st.text_input(
@@ -68,6 +72,7 @@ def show_projects():
     if st.button(
         "Create Project"
     ):
+
         if new_project:
 
             create_project(
@@ -82,8 +87,6 @@ def show_projects():
 
     st.divider()
 
-
-
     if not projects:
 
         st.info(
@@ -91,16 +94,71 @@ def show_projects():
         )
 
         return
-    
+
     for project in projects:
 
-        if st.button(
-            f"📁 {project}",
-            use_container_width=True
-        ):
-            
-            st.session_state[
-                "selected_project"
-            ] = project
+        pdfs_path, storage_path = get_project_paths(
+            project
+        )
 
-            st.rerun()
+        pdf_count = 0
+        chunk_count = 0
+
+        if os.path.exists(
+            pdfs_path
+        ):
+            pdf_count = len(
+                [
+                    file
+                    for file in os.listdir(
+                        pdfs_path
+                    )
+                    if file.endswith(
+                        ".pdf"
+                    )
+                ]
+            )
+
+        _, chunks = load_index(
+            storage_path
+        )
+
+        if chunks:
+            chunk_count = len(
+                chunks
+            )
+
+        with st.container():
+
+            st.markdown(
+                f"### 📁 {project}"
+            )
+
+            col1, col2 = st.columns(
+                2
+            )
+
+            with col1:
+
+                st.caption(
+                    f"PDFs: {pdf_count}"
+                )
+
+            with col2:
+
+                st.caption(
+                    f"Chunks: {chunk_count}"
+                )
+
+            if st.button(
+                "Open Project",
+                key=f"open_{project}"
+            ):
+
+                st.session_state[
+                    "selected_project"
+                ] = project
+
+                st.rerun()
+
+            st.divider()
