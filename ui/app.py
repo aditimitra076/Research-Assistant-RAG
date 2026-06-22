@@ -36,10 +36,16 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title(
-    "📚 Research Assistant"
-)
+with st.sidebar:
+    st.title(
+        "📚 Research Assistant"
+    )
 
+    st.caption(
+        "Powered by RAG + Gemini"
+    )
+
+    st.divider()
 
 
 if "chat_project" in st.session_state:
