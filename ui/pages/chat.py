@@ -4,65 +4,87 @@ from components.rag_engine import(
     ask_project
 )
 
+
 def show_chat(
         project_name
 ):
+
     st.markdown(
-        f"##💬{project_name}"
+        f"## 💬 {project_name}"
     )
 
     if st.button(
         "← Back",
-        key = "chat_back"
+        key="chat_back"
     ):
-        
+
         st.session_state[
             "chat_mode"
         ] = False
 
         st.rerun()
+
     st.divider()
 
-    if "messages" not in st.session_state:
+    if (
+        "project_chats"
+        not in st.session_state
+    ):
+        st.session_state[
+            "project_chats"
+        ] = {}
 
-        st.session_state.messages=[]
-    
-    for message in st.session_state.messages:
+    if (
+        project_name
+        not in st.session_state[
+            "project_chats"
+        ]
+    ):
+        st.session_state[
+            "project_chats"
+        ][project_name] = []
+
+    messages = st.session_state[
+        "project_chats"
+    ][project_name]
+
+    for message in messages:
 
         with st.chat_message(
             message["role"]
         ):
-            
+
             st.markdown(
                 message["content"]
             )
 
-            if(
-                message["role"]=="assistant"
-                and 
-                "sources" in message 
+            if (
+                message["role"] == "assistant"
+                and
+                "sources" in message
             ):
-                
+
                 with st.expander(
                     "Sources"
                 ):
-                    
+
                     for source in message[
                         "sources"
                     ]:
                         st.write(
                             source
                         )
+
     query = st.chat_input(
         "Ask anything..."
     )
 
     if query:
 
-        st.session_state.messages.append(
+        messages.append(
             {
-                "role":"user",
-                "content":query
+                "role": "user",
+                "content": query
             }
         )
 
@@ -81,7 +103,7 @@ def show_chat(
         with st.chat_message(
             "assistant"
         ):
-            
+
             st.markdown(
                 answer
             )
@@ -89,15 +111,15 @@ def show_chat(
             with st.expander(
                 "Sources"
             ):
-                
+
                 for source in sources:
                     st.write(
                         source
                     )
 
-        st.session_state.messages.append(
+        messages.append(
             {
-                "role":"assistant",
+                "role": "assistant",
                 "content": answer,
                 "sources": sources
             }

@@ -93,9 +93,15 @@ def show_workspace(
     if st.button(
         "← Back"
     ):
-       del st.session_state[
-           "selected_project"
-       ]
+       if "selected_project" in st.session_state:
+           del st.session_state[
+               "selected_project"
+           ]
+
+       if "chat_mode" in st.session_state:
+           del st.session_state[
+               "chat_mode"
+           ]
 
        st.rerun()
 
@@ -220,7 +226,7 @@ def show_workspace(
     if st.button(
         "Open Chat"
     ):
-        
+
         st.session_state[
             "chat_mode"
         ] = True
