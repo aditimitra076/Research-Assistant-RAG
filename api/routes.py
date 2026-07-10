@@ -25,6 +25,10 @@ from api.schemas import (
     ProjectRequest
 )
 
+from modules.project_manager import (
+    delete_project
+)
+
 router = APIRouter()
 
 
@@ -121,4 +125,17 @@ def chat(request: ChatRequest):
     return {
         "answer": answer,
         "sources": sources
+    }
+
+
+
+@router.delete("/projects")
+def delete(request: ProjectRequest):
+
+    delete_project(
+        request.project_name
+    )
+
+    return {
+        "message": f"{request.project_name} deleted successfully."
     }
