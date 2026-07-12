@@ -29,6 +29,11 @@ from modules.project_manager import (
     delete_project
 )
 
+from modules.project_indexer import (
+    rebuild_project_index
+)
+
+
 router = APIRouter()
 
 
@@ -138,4 +143,22 @@ def delete(request: ProjectRequest):
 
     return {
         "message": f"{request.project_name} deleted successfully."
+    }
+
+
+@router.post("/rebuild")
+def rebuild(request: ProjectRequest):
+
+    success = rebuild_project_index(
+        request.project_name
+    )
+
+    if success:
+
+        return {
+            "message": "Index rebuilt successfully."
+        }
+
+    return {
+        "message": "No PDFs found in this project."
     }

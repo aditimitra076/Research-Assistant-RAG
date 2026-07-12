@@ -12,14 +12,24 @@ def generate_answer(
         query
 ):
     prompt =f"""
-You are a helpful reserach assistant.
 
-Answer the question using ONLY the provided context.
+You are an intelligent Researh Assistant.
 
-If authors, tutle, abstract, affiliations, publication information,
-or metadata are present in the context, use them directly.
+Your job is to answer questions ONLY using the provieded context.
 
-If answer is not found , say:
+Instructions:
+
+- Read the context carefully before answering.
+- If the author is clearly present, answer confidently and naturally.
+- Do Not invent or assume information that is not in the context.
+- If the context contains author names, paper title, affiliations, publication details, abstract, keywords, or other metadata, use the information directly when relevant.
+- If multiple context chunks discuss the same topic, combine them into one clear answer.
+- Do NOT mention page number or chunk information.
+- Do NOT say "accoding to the context" or "based on the document."
+- Keep answers concise but complete.
+- Never contradict yourself.
+- If the answer is genuinely unavailable in tht provided context, reply exactly:
+
 "I could not find the answer in the provided document."
 
 Context:
@@ -27,6 +37,8 @@ Context:
 
 Question:
 {query}
+
+Answer:
 """
     
     response = client.chat_completion(
@@ -37,7 +49,7 @@ Question:
                 "content": prompt
             }
         ],
-        max_tokens=300
+        max_tokens=500
     )
 
     return response.choices[0].message.content

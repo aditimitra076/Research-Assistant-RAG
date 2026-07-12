@@ -41,7 +41,7 @@ def rebuild_project_index(project_name):
             "No PDFs found."
         )
 
-        return 
+        return False
 
     chunks = create_chunks(
         pdf_data
@@ -52,7 +52,7 @@ def rebuild_project_index(project_name):
             "No chunks created."
         )
 
-        return 
+        return False
 
     embeddings = create_embeddings(
         chunks
@@ -69,5 +69,9 @@ def rebuild_project_index(project_name):
     )
 
     print(
-        "INdex updated."
+        "Index updated."
     )
+
+    return True
+
+  
