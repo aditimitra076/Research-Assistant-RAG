@@ -7,7 +7,8 @@ from fastapi import (
 
 from ui.components.rag_engine import (
     ask_project,
-    summarize_project
+    summarize_project,
+    research_gaps_project
 )
 
 import os
@@ -174,4 +175,16 @@ def summary(request: ProjectRequest):
 
     return {
         "summary": summary
+    }
+
+
+@router.post("/research-gaps")
+def research_gaps(request: ProjectRequest):
+
+    gaps = research_gaps_project(
+        request.project_name
+    )
+
+    return {
+        "research_gaps": gaps
     }
