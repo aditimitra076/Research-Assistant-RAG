@@ -1,65 +1,82 @@
 # 📚 Research Assistant (RAG)
 
-A Retrieval-Augmented Generation (RAG) based Research Assistant that allows users to create projects, upload research papers, build vector indexes, ask natural language questions, and generate structured summaries using Large Language Models.
+A Retrieval-Augmented Generation (RAG) based Research Assistant that enables users to organize research papers into projects, perform semantic search, ask natural language questions, and generate structured paper summaries using Large Language Models.
+
+Built using **Python, FAISS, Sentence Transformers, Hugging Face LLMs, FastAPI, and Streamlit**.
 
 ---
 
-## ✨ Features
+# ✨ Features
 
-- 📁 Multiple research projects
-- 📄 Upload one or more PDFs
-- 🔍 Semantic search using FAISS
+- 📁 Multiple Project Management
+- 📄 Upload one or multiple research papers (PDF)
+- ⚡ Automatic PDF indexing
+- 🔍 Semantic Retrieval using FAISS
 - 🤖 LLM-powered Question Answering
-- 📝 Automatic Paper Summarization
-- 🔎 Typo-tolerant Retrieval
+- 📝 Structured Paper Summaries
+- 🔎 Typo-tolerant Query Retrieval
+- 📑 Metadata-aware Retrieval (authors, title, conference, etc.)
 - 📚 Source Citations
 - 📊 Confidence-based Answer Filtering
-- ⚡ FastAPI backend
-- 🎨 Streamlit interface
+- ⚡ REST API using FastAPI
+- 🎨 Interactive Streamlit Interface
 
 ---
 
-## 🛠 Tech Stack
+# 🛠 Tech Stack
 
+### Backend
 - Python
-- Streamlit
 - FastAPI
+
+### Frontend
+- Streamlit
+
+### RAG Pipeline
 - FAISS
 - Sentence Transformers
 - Hugging Face Inference API
 - PyPDF
 - RapidFuzz
 
+### Utilities
+- NumPy
+- Pickle
+- dotenv
+
 ---
 
-## 📂 Project Structure
+# 📂 Project Structure
 
 ```text
 Research_Assistant_RAG/
 │
-├── api/                 # FastAPI backend
-├── data/                # Sample PDFs
-├── modules/             # Core RAG pipeline
+├── api/                  # FastAPI backend
+├── modules/              # Core RAG pipeline
 │   ├── pdf_loader.py
 │   ├── chunker.py
 │   ├── embedder.py
-│   ├── vector_store.py
 │   ├── retriever.py
 │   ├── generator.py
+│   ├── vector_store.py
 │   ├── project_manager.py
 │   ├── project_indexer.py
 │   └── ...
 │
-├── projects/            # User-created projects
-├── ui/                  # Streamlit frontend
+├── projects/             # User-created projects
+├── ui/                   # Streamlit interface
 │   ├── components/
 │   └── pages/
 │
+├── assets/               # Application screenshots
 ├── requirements.txt
-└── README.md
+├── README.md
+└── .env
 ```
 
-## ⚙️ Installation
+---
+
+# ⚙️ Installation
 
 Clone the repository
 
@@ -76,7 +93,7 @@ python -m venv venv
 
 Activate it
 
-Windows
+### Windows
 
 ```bash
 venv\Scripts\activate
@@ -94,15 +111,25 @@ Create a `.env` file
 HF_TOKEN=your_huggingface_api_key
 ```
 
-## 🚀 Running the Application
+---
 
-Start the Streamlit frontend
+# 🚀 Running the Application
+
+## Streamlit UI
 
 ```bash
 streamlit run ui/app.py
 ```
 
-(Optional) Start the FastAPI backend
+Open
+
+```
+http://localhost:8501
+```
+
+---
+
+## FastAPI Backend
 
 ```bash
 uvicorn api.main:app --reload
@@ -114,87 +141,116 @@ Swagger Documentation
 http://127.0.0.1:8000/docs
 ```
 
-## 🔄 Workflow
+---
 
-1. Create a Project
-2. Upload one or more Research Papers
-3. Build the Vector Index
-4. Ask Natural Language Questions
-5. Retrieve Relevant Chunks
-6. Generate Answers using Llama 3.1
-7. Generate Structured Paper Summaries
+# 🔄 Workflow
 
+```text
+Create Project
+      ↓
+Upload PDFs
+      ↓
+Build FAISS Index
+      ↓
+User Question
+      ↓
+Typo Correction
+      ↓
+Semantic Retrieval
+      ↓
+LLM Answer Generation
+      ↓
+Answer + Sources
+```
 
-## ✅ Current Features
+---
+
+# ✅ Implemented Features
 
 - Multiple Project Management
-- PDF Upload
+- Search Projects
+- Delete Projects
+- Upload Multiple PDFs
 - Automatic Chunking
 - Sentence Embeddings
 - FAISS Vector Search
 - Typo-Tolerant Retrieval
 - Metadata-aware Retrieval
-- Confidence-based Filtering
-- Source Citations
-- Research Paper Summarization
+- Confidence-based Retrieval Filtering
+- Source Citation Generation
+- Paper Summarization
 - FastAPI REST API
 - Streamlit User Interface
 
-## 🏗️ System Architecture
+---
+
+# 🏗 System Architecture
 
 ```text
-                +----------------------+
-                |   Streamlit UI       |
-                +----------+-----------+
-                           |
-                           v
-                +----------------------+
-                |   RAG Engine         |
-                +----------+-----------+
-                           |
-        +------------------+------------------+
-        |                                     |
-        v                                     v
-+------------------+               +----------------------+
-| Retriever        |               | Generator (LLM)      |
-| FAISS +          |               | Llama 3.1            |
-| SentenceEncoder  |               | HuggingFace API      |
-+--------+---------+               +----------+-----------+
-         |                                     ^
-         v                                     |
-+------------------------+                     |
-| Chunked PDF Embeddings |---------------------+
-+------------------------+
-         ^
-         |
-+------------------------+
-| Uploaded PDFs          |
-+------------------------+
+                    Streamlit UI
+                          │
+                          ▼
+                   RAG Engine
+                ┌────────┴────────┐
+                │                 │
+                ▼                 ▼
+         Retriever           Generator
+    (FAISS + Embeddings)      (Llama 3.1)
+
+                ▲
+                │
+         Chunked PDF Embeddings
+                ▲
+                │
+           Uploaded PDFs
 ```
 
-## 🚀 Future Improvements
+---
 
-- Hybrid Search (BM25 + Dense Retrieval)
-- Cross Encoder Re-ranking
+# 📸 Screenshots
+
+Application screenshots are available inside the **assets/** folder.
+
+They include:
+
+- Home Page
+- Project Dashboard
+- Upload Workflow
+- Question Answering
+- Paper Summary
+- API Documentation (Swagger)
+
+---
+
+# 🚀 Future Improvements
+
+- Hybrid Retrieval (BM25 + Dense Search)
+- Cross-Encoder Re-ranking
 - Research Gap Detection
+- Multi-paper Comparison
 - Citation Export
-- Multi-document Comparison
-- OCR Support for Scanned PDFs
-- Local LLM Support
+- OCR Support
+- Local LLM Integration
 - Docker Deployment
+- Complete Frontend–API Separation
 
-## 👩‍💻 Author
+---
+
+# 👩‍💻 Author
 
 **Aditi Mitra**
 
-MCA'27 • University of Hyderabad
+MCA '27 • University of Hyderabad
 
-Interests:
+Interests
+
 - Retrieval-Augmented Generation (RAG)
 - Machine Learning
-- AI Systems
 - NLP
+- AI Systems
 
-## 📄 License
+---
 
-This project is intended for educational and portfolio purposes.
+# 📄 License
+
+This project is intended for educational, learning, and portfolio purposes.
