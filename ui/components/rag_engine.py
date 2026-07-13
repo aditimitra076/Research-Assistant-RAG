@@ -11,7 +11,8 @@ from modules.retriever import(
 )
 
 from modules.generator import(
-    generate_answer
+    generate_answer,
+    generate_summary
 )
 
 def ask_project(
@@ -70,3 +71,40 @@ def ask_project(
             seen.add(source)
             
     return answer, sources
+
+
+def summarize_project(
+        project_name
+):
+
+    _, storage_path = get_project_paths(
+        project_name
+    )
+
+    index, chunks = load_index(
+        storage_path
+    )
+
+    if index is None:
+
+        return (
+            "No PDFs uploaded in this project."
+        )
+
+    context = ""
+
+    for chunk in chunks:
+
+        context += (
+            "\n"
+            f"{chunk['text']}\n"
+        )
+
+        if len(context) > 12000:
+            break
+
+    summary = generate_summary(
+        context
+    )
+
+    return summary
