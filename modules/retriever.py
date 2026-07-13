@@ -1,4 +1,7 @@
+import re
 import numpy as np
+
+from rapidfuzz import process, fuzz
 
 from sentence_transformers import SentenceTransformer
 
@@ -7,13 +10,84 @@ model = SentenceTransformer(
     "all-MiniLM-L6-v2"
 )
 
+
+def correct_query(
+        query,
+        chunks
+):
+
+    vocabulary = set()
+
+    for chunk in chunks:
+
+        words = re.findall(
+            r"[A-Za-z]+",
+            chunk["text"].lower()
+        )
+
+        vocabulary.update(words)
+
+    corrected_words = []
+
+    for word in query.split():
+
+        clean_word = re.sub(
+            r"[^A-Za-z]",
+            "",
+            word.lower()
+        )
+
+        if (
+            len(clean_word) < 4
+            or clean_word in vocabulary
+        ):
+
+            corrected_words.append(word)
+
+            continue
+
+        match = process.extractOne(
+            clean_word,
+            vocabulary,
+            scorer=fuzz.ratio
+        )
+
+        if (
+            match
+            and match[1] >= 85
+        ):
+
+            corrected_words.append(
+                match[0]
+            )
+
+        else:
+
+            corrected_words.append(
+                word
+            )
+
+    return " ".join(
+        corrected_words
+    )
+
+
 def retrieve_chunks(
         query,
         index,
         chunks,
         top_k=5
 ):
-    
+
+    query = correct_query(
+        query,
+        chunks
+    )
+
+    print(
+        f"\nCorrected Query: {query}"
+    )
+
     query_embedding = np.array(
         model.encode(
             query,
@@ -26,29 +100,110 @@ def retrieve_chunks(
         -1
     )
 
+    metadata_keywords = [
+        "author",
+        "authors",
+        "title",
+        "abstract",
+        "keyword",
+        "keywords",
+        "affiliation",
+        "affiliations",
+        "published",
+        "publication",
+        "conference",
+        "journal"
+    ]
 
-    filtered_chunks = []
+    metadata_query = any(
+        word in query.lower()
+        for word in metadata_keywords
+    )
+
+    search_k = 10 if metadata_query else top_k
 
     scores, indices = index.search(
         query_embedding,
-        top_k
+        search_k
     )
 
-    # context = "\n\n".join(
-    #     chunks[idx]["text"]
-    #     for idx in indices[0]
-    # )
+    filtered_chunks = []
 
-    # return context, scores, indices
+    selected_indices = []
 
-    for score, idx in zip(scores[0], indices[0]):
+    added = set()
 
-        if score > 0.45:
+    if metadata_query:
+
+        for idx, chunk in enumerate(chunks):
+
+            if chunk["page"] <= 2:
+
+                filtered_chunks.append(
+                    chunk["text"]
+                )
+
+                selected_indices.append(
+                    idx
+                )
+
+                added.add(idx)
+
+    for score, idx in zip(
+        scores[0],
+        indices[0]
+    ):
+
+        if idx == -1:
+            continue
+
+        if idx in added:
+            continue
+
+        if score < 0.45:
+            continue
+
+        filtered_chunks.append(
+            chunks[idx]["text"]
+        )
+
+        selected_indices.append(
+            idx
+        )
+
+        added.add(idx)
+
+    if len(filtered_chunks) == 0:
+
+        for idx in indices[0]:
+
+            if idx == -1:
+                continue
+
             filtered_chunks.append(
                 chunks[idx]["text"]
             )
-    context = "\n\n".join(
-        filtered_chunks
-    )
 
-    return context, scores, indices
+            selected_indices.append(
+                idx
+            )
+
+            if len(filtered_chunks) == top_k:
+                break
+
+    context = ""
+
+    for idx in selected_indices:
+
+        context += (
+            "\n=====DOCUMENT=====\n"
+            f"Filename: {chunks[idx]['pdf_name']}\n"
+            f"Page: {chunks[idx]['page']}\n\n"
+            f"{chunks[idx]['text']}\n\n"
+        )
+
+    return (
+        context,
+        scores,
+        np.array([selected_indices])
+    )
