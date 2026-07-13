@@ -35,9 +35,6 @@ def upload_pdf(
         file_name
     )
 
-
-    
-
     shutil.copy(
         source_file_path,
         destination

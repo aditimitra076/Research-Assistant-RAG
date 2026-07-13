@@ -242,9 +242,7 @@ def show_workspace(
             ]
         )
 
-    
-
-
+        
     st.divider()
 
     st.markdown(

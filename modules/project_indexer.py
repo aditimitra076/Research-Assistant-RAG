@@ -61,17 +61,7 @@ def rebuild_project_index(project_name):
     index = create_index(
         embeddings
     )
-
-#temp
-    # print("\nFirst 5 chunks\n")
-
-    # for chunk in chunks[:5]:
-    #     print("="*40)
-    #     print(chunk["pdf_name"])
-    #     print("page:", chunk["page"])
-    #     print(chunk["text"][:300])
-#temp
-
+    
     save_index(
         index,
         chunks,
