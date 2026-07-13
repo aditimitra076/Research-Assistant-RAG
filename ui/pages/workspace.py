@@ -24,7 +24,8 @@ from modules.index_manager import(
 )
 
 from ui.components.rag_engine import(
-    summarize_project
+    summarize_project,
+    research_gaps_project
 )
 
 def show_workspace(
@@ -206,6 +207,38 @@ def show_workspace(
         st.markdown(
             st.session_state[
                 "paper_summary"
+            ]
+        )
+
+
+        st.markdown(
+        "### 🔍 Research Gap Finder"
+    )
+
+    if st.button(
+        "Find Research Gaps"
+    ):
+
+        with st.spinner(
+            "Analyzing paper..."
+        ):
+
+            gaps = research_gaps_project(
+                project_name
+            )
+
+        st.session_state[
+            "research_gaps"
+        ] = gaps
+
+    if (
+        "research_gaps"
+        in st.session_state
+    ):
+
+        st.markdown(
+            st.session_state[
+                "research_gaps"
             ]
         )
 
