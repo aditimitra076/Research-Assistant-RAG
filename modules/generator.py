@@ -110,3 +110,61 @@ Summary:
 
     return response.choices[0].message.content
 
+def generate_research_gaps(
+        context
+):
+
+    prompt = f"""
+
+You are an expert AI Research Assistant.
+
+Analyze ONLY the provided research paper context.
+
+Identify research gaps, open problems, limitations, and future research directions mentioned or strongly implied by the paper.
+
+Return the result in this format.
+
+# Research Gaps
+
+- Gap 1
+- Gap 2
+- Gap 3
+
+# Open Problems
+
+- Problem 1
+- Problem 2
+
+# Future Research Directions
+
+- Direction 1
+- Direction 2
+- Direction 3
+
+Rules:
+
+- Use ONLY the provided context.
+- Do NOT invent research gaps.
+- If a section is unavailable, write:
+
+Not available in the document.
+
+Context:
+
+{context}
+
+Research Gaps:
+"""
+
+    response = client.chat_completion(
+        model="meta-llama/Llama-3.1-8B-Instruct",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        max_tokens=700
+    )
+
+    return response.choices[0].message.content

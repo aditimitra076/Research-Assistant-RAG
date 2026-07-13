@@ -6,7 +6,8 @@ from fastapi import (
 )
 
 from ui.components.rag_engine import (
-    ask_project
+    ask_project,
+    summarize_project
 )
 
 import os
@@ -161,4 +162,16 @@ def rebuild(request: ProjectRequest):
 
     return {
         "message": "No PDFs found in this project."
+    }
+
+
+@router.post("/summary")
+def summary(request: ProjectRequest):
+
+    summary = summarize_project(
+        request.project_name
+    )
+
+    return {
+        "summary": summary
     }

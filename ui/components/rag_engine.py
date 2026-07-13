@@ -12,7 +12,8 @@ from modules.retriever import(
 
 from modules.generator import(
     generate_answer,
-    generate_summary
+    generate_summary,
+    generate_research_gaps
 )
 
 def ask_project(
@@ -108,3 +109,40 @@ def summarize_project(
     )
 
     return summary
+
+
+def research_gaps_project(
+        project_name
+):
+
+    _, storage_path = get_project_paths(
+        project_name
+    )
+
+    index, chunks = load_index(
+        storage_path
+    )
+
+    if index is None:
+
+        return (
+            "No PDFs uploaded in this project."
+        )
+
+    context = ""
+
+    for chunk in chunks:
+
+        context += (
+            "\n"
+            f"{chunk['text']}\n"
+        )
+
+        if len(context) > 12000:
+            break
+
+    gaps = generate_research_gaps(
+        context
+    )
+
+    return gaps

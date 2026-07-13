@@ -23,7 +23,9 @@ from modules.index_manager import(
     load_index
 )
 
-
+from ui.components.rag_engine import(
+    summarize_project
+)
 
 def show_workspace(
         project_name
@@ -173,6 +175,42 @@ def show_workspace(
                 st.warning(
                     "No PDFs uploaded in this project."
                 )
+
+
+
+        st.markdown(
+        "### 📄 Paper Summary"
+    )
+
+    if st.button(
+        "Generate Summary"
+    ):
+
+        with st.spinner(
+            "Generating summary..."
+        ):
+
+            summary = summarize_project(
+                project_name
+            )
+
+        st.session_state[
+            "paper_summary"
+        ] = summary
+
+    if (
+        "paper_summary"
+        in st.session_state
+    ):
+
+        st.markdown(
+            st.session_state[
+                "paper_summary"
+            ]
+        )
+
+    
+
 
     st.divider()
 
