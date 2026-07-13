@@ -72,6 +72,80 @@ def correct_query(
     )
 
 
+#reranker
+def rerank_chunks(
+        query,
+        chunks,
+        scores,
+        indices
+):
+
+    query_words = set(
+        re.findall(
+            r"[A-Za-z]+",
+            query.lower()
+        )
+    )
+
+    reranked = []
+
+    for score, idx in zip(
+        scores[0],
+        indices[0]
+    ):
+
+        if idx == -1:
+            continue
+
+        chunk = chunks[idx]
+
+        chunk_words = set(
+            re.findall(
+                r"[A-Za-z]+",
+                chunk["text"].lower()
+            )
+        )
+
+        keyword_overlap = len(
+            query_words.intersection(
+                chunk_words
+            )
+        )
+
+        page_bonus = 0
+
+        if chunk["page"] <= 2:
+            page_bonus = 2
+
+        final_score = (
+
+            float(score) * 0.6 +
+
+            keyword_overlap * 0.3 +
+
+            page_bonus * 0.1
+        )
+
+        reranked.append(
+
+            (
+                final_score,
+                idx
+            )
+        )
+
+    reranked.sort(
+        reverse=True
+    )
+
+    return [
+        idx
+        for _, idx in reranked
+    ]
+
+
+
+
 def retrieve_chunks(
         query,
         index,
@@ -127,6 +201,13 @@ def retrieve_chunks(
         search_k
     )
 
+    reranked_indices = rerank_chunks(
+    query,
+    chunks,
+    scores,
+    indices
+    )
+
     filtered_chunks = []
 
     selected_indices = []
@@ -149,10 +230,16 @@ def retrieve_chunks(
 
                 added.add(idx)
 
-    for score, idx in zip(
-        scores[0],
-        indices[0]
-    ):
+    score_lookup = {
+        idx: score
+        for score, idx in zip(
+            scores[0],
+            indices[0]
+        )
+    }
+
+    for idx in reranked_indices:
+        score = score_lookup[idx]
 
         if idx == -1:
             continue
@@ -175,7 +262,7 @@ def retrieve_chunks(
 
     if len(filtered_chunks) == 0:
 
-        for idx in indices[0]:
+        for idx in reranked_indices:
 
             if idx == -1:
                 continue
