@@ -289,8 +289,14 @@ def retrieve_chunks(
             f"{chunks[idx]['text']}\n\n"
         )
 
+    confidence =0
+
+    if len(scores[0])>0:
+        confidence = float(max(scores[0]))
+
     return (
         context,
         scores,
-        np.array([selected_indices])
+        np.array([selected_indices]),
+        confidence
     )

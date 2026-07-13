@@ -34,11 +34,17 @@ def ask_project(
             []
         )
     
-    context, scores, indices = retrieve_chunks(
+    context, scores, indices, confidence = retrieve_chunks(
         query,
         index,
         chunks
     )
+
+    if confidence <0.50:
+        return (
+            "I could not confidently find the answer in the uploaded documents.",
+            []
+        )
 
     answer = generate_answer(
         context,
@@ -58,10 +64,9 @@ def ask_project(
 
         if source not in seen:
             sources.append(
-                f"{chunks[idx]['pdf_name']}"
-                f"(Page{chunks[idx]['page']})"
+                f"{chunks[idx]['pdf_name']}(Page{chunks[idx]['page']})"
+                
             )
-
             seen.add(source)
             
     return answer, sources
