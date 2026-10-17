@@ -1,11 +1,31 @@
 from huggingface_hub import InferenceClient
 
 import os
+import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_hf_token():
+    token = os.getenv("HF_TOKEN")
+    if token:
+        return token
+
+    try:
+        return st.secrets.get("HF_TOKEN")
+    except Exception:
+        return None
 
 
-client = InferenceClient(
-    api_key=os.getenv("HF_TOKEN")
-)
+def is_hf_token_configured():
+    return bool(get_hf_token())
+
+
+def _get_client():
+    token = get_hf_token()
+    if not token:
+        raise RuntimeError("Configure HF_TOKEN to enable Hugging Face inference.")
+    return InferenceClient(api_key=token)
 
 def generate_answer(
         context,
@@ -37,7 +57,7 @@ Question:
 Answer:
 """
     
-    response = client.chat_completion(
+    response = _get_client().chat_completion(
         model="meta-llama/Llama-3.1-8B-Instruct",
         messages=[
             {
@@ -97,7 +117,7 @@ Context:
 Summary:
 """
 
-    response = client.chat_completion(
+    response = _get_client().chat_completion(
         model="meta-llama/Llama-3.1-8B-Instruct",
         messages=[
             {
@@ -156,7 +176,7 @@ Context:
 Research Gaps:
 """
 
-    response = client.chat_completion(
+    response = _get_client().chat_completion(
         model="meta-llama/Llama-3.1-8B-Instruct",
         messages=[
             {

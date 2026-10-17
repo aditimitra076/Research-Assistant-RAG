@@ -18,11 +18,13 @@ from modules.generator import(
 
 def ask_project(
         project_name,
-        query
+    query,
+    workspace_id=None
 ):
     
     _, storage_path = get_project_paths(
-        project_name
+        project_name,
+        workspace_id
     )
 
     index, chunks = load_index(
@@ -75,11 +77,13 @@ def ask_project(
 
 
 def summarize_project(
-        project_name
+    project_name,
+    workspace_id=None
 ):
 
     _, storage_path = get_project_paths(
-        project_name
+        project_name,
+        workspace_id
     )
 
     index, chunks = load_index(
@@ -112,11 +116,13 @@ def summarize_project(
 
 
 def research_gaps_project(
-        project_name
+    project_name,
+    workspace_id=None
 ):
 
     _, storage_path = get_project_paths(
-        project_name
+        project_name,
+        workspace_id
     )
 
     index, chunks = load_index(

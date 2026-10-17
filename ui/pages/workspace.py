@@ -1,6 +1,7 @@
 import streamlit as st
 
 import os
+import tempfile
 from html import escape
 
 from modules.project_manager import(
@@ -32,7 +33,8 @@ from ui.components.rag_engine import(
 from ui.components.icons import icon_svg
 
 def show_workspace(
-        project_name
+    project_name,
+    workspace_id
 ):
     st.markdown(
         f'<section class="page-hero"><div class="hero-icon">{icon_svg("folder")}</div>'
@@ -42,7 +44,8 @@ def show_workspace(
     )
 
     pdfs_path, storage_path = get_project_paths(
-        project_name
+        project_name,
+        workspace_id
     )
 
     pdf_count = 0
@@ -123,17 +126,28 @@ def show_workspace(
 
             uploaded_file = st.file_uploader(
                 "Choose a PDF",
-                type=["pdf"]
+                type=["pdf"],
+                max_upload_size=20
             )
 
             if uploaded_file and st.button("Upload PDF", type="primary"):
-                temp_path = uploaded_file.name
+                temp_path = None
+                try:
+                    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+                        temp_file.write(uploaded_file.getbuffer())
+                        temp_path = temp_file.name
 
-                with open(temp_path, "wb") as file:
-                    file.write(uploaded_file.getbuffer())
-
-                upload_pdf(temp_path, project_name)
-                st.success("PDF uploaded successfully")
+                    with st.spinner("Saving the PDF and building its index..."):
+                        upload_pdf(temp_path, project_name, workspace_id)
+                    st.success("PDF uploaded and indexed successfully.")
+                except Exception:
+                    st.error("The PDF could not be processed. Try a valid, text-based PDF and upload it again.")
+                finally:
+                    if temp_path and os.path.exists(temp_path):
+                        try:
+                            os.remove(temp_path)
+                        except OSError:
+                            pass
 
     with knowledge_col:
         with st.container(border=True):
@@ -143,7 +157,7 @@ def show_workspace(
             )
 
             if st.button("Rebuild Index"):
-                success = rebuild_project_index(project_name)
+                success = rebuild_project_index(project_name, workspace_id)
 
                 if success:
                     st.success("Index rebuilt")
@@ -156,10 +170,16 @@ def show_workspace(
             )
 
             if st.button("Generate Summary"):
-                with st.spinner("Generating summary..."):
-                    summary = summarize_project(project_name)
+                try:
+                    with st.spinner("Generating summary..."):
+                        summary = summarize_project(project_name, workspace_id)
 
-                st.session_state["paper_summary"] = summary
+                    if summary:
+                        st.session_state["paper_summary"] = summary
+                    else:
+                        st.error("The summary could not be generated. Check the inference configuration and try again.")
+                except Exception:
+                    st.error("The summary could not be generated. Check the Hugging Face configuration or try again later.")
 
             if "paper_summary" in st.session_state:
                 st.markdown(st.session_state["paper_summary"])
@@ -170,10 +190,16 @@ def show_workspace(
                 )
 
                 if st.button("Find Research Gaps"):
-                    with st.spinner("Analyzing paper..."):
-                        gaps = research_gaps_project(project_name)
+                    try:
+                        with st.spinner("Analyzing paper..."):
+                            gaps = research_gaps_project(project_name, workspace_id)
 
-                    st.session_state["research_gaps"] = gaps
+                        if gaps:
+                            st.session_state["research_gaps"] = gaps
+                        else:
+                            st.error("Research gaps could not be generated. Check the inference configuration and try again.")
+                    except Exception:
+                        st.error("Research gaps could not be generated. Check the Hugging Face configuration or try again later.")
 
                 if "research_gaps" in st.session_state:
                     st.markdown(st.session_state["research_gaps"])
@@ -184,7 +210,8 @@ def show_workspace(
     )
 
     pdfs_path, _ = get_project_paths(
-        project_name
+        project_name,
+        workspace_id
     )
 
     pdf_files = []
@@ -234,5 +261,6 @@ def show_workspace(
     ):
         
         show_chat(
-            project_name
+            project_name,
+            workspace_id
         )

@@ -22,10 +22,11 @@ from modules.index_manager import(
     save_index
 )
 
-def rebuild_project_index(project_name):
+def rebuild_project_index(project_name, workspace_id=None):
 
     pdfs_path, storage_path = get_project_paths(
-        project_name
+        project_name,
+        workspace_id
     )
 
     print(

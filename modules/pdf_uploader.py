@@ -19,11 +19,13 @@ from modules.index_manager import(
 
 def upload_pdf(
         source_file_path,
-        project_name
+    project_name,
+    workspace_id=None
 ):
     
     pdfs_path,_ = get_project_paths(
-        project_name
+    project_name,
+    workspace_id
     )
 
     file_name = os.path.basename(
@@ -65,7 +67,8 @@ def upload_pdf(
     )
 
     _, storage_path = get_project_paths(
-        project_name
+        project_name,
+        workspace_id
     )
 
     save_index(

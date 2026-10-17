@@ -9,7 +9,8 @@ from ui.components.icons import icon_svg
 
 
 def show_chat(
-        project_name
+    project_name,
+    workspace_id
 ):
 
     st.markdown(
@@ -107,10 +108,16 @@ def show_chat(
                 query
             )
 
-        answer, sources = ask_project(
-            project_name,
-            query
-        )
+        try:
+            with st.spinner("Retrieving relevant passages and generating an answer..."):
+                answer, sources = ask_project(
+                    project_name,
+                    query,
+                    workspace_id
+                )
+        except Exception:
+            answer = "I could not complete this request. Check the Hugging Face configuration or try again later."
+            sources = []
 
         with st.chat_message(
             "assistant"

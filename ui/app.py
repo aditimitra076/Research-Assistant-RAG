@@ -1,15 +1,14 @@
 import sys
 import os
+from uuid import uuid4
 
 
-sys.path.append(
-    os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            ".."
-        )
-    )
-)
+ui_path = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(ui_path)
+
+for import_path in (ui_path, project_root):
+    if import_path not in sys.path:
+        sys.path.insert(0, import_path)
 
 import streamlit as st
 
@@ -22,6 +21,7 @@ from pages.workspace import(
 )
 
 from ui.components.icons import icon_svg
+from modules.generator import is_hf_token_configured
 
 
 st.set_page_config(
@@ -44,7 +44,6 @@ st.markdown(
         --accent: #78d6bd;
         --accent-strong: #9be5d1;
     }
-
     [data-testid="stAppViewContainer"] {
         background: var(--page);
         color: var(--text);
@@ -451,20 +450,38 @@ with st.sidebar:
     )
 
     st.caption(
-        "Powered by RAG + Gemini"
+        "Powered by RAG + Hugging Face Inference"
     )
 
     st.divider()
 
+if not is_hf_token_configured():
+    st.warning("Configure HF_TOKEN in your environment or Streamlit secrets to enable answer generation.")
+
+try:
+    public_demo_mode = os.getenv(
+        "PUBLIC_DEMO_MODE",
+        st.secrets.get("PUBLIC_DEMO_MODE", "false")
+    )
+except Exception:
+    public_demo_mode = os.getenv("PUBLIC_DEMO_MODE", "false")
+
+public_demo_mode = str(public_demo_mode).lower() == "true"
+
+if public_demo_mode and "workspace_id" not in st.session_state:
+    st.session_state["workspace_id"] = uuid4().hex
+
+workspace_id = st.session_state.get("workspace_id")
 
 if "selected_project" in st.session_state:
 
     show_workspace(
         st.session_state[
             "selected_project"
-        ]
+        ],
+        workspace_id
     )
 else:
 
-    show_projects() 
+    show_projects(workspace_id)
 

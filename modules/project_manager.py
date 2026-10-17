@@ -1,17 +1,36 @@
 import os
 import shutil
+import tempfile
 
 PROJECTS_FOLDER = "projects"
 
-def create_project(project_name):
+def _projects_folder(workspace_id=None):
+        if workspace_id is None:
+                return PROJECTS_FOLDER
 
-    
-        project_path= os.path.join(
-            PROJECTS_FOLDER,
-            project_name
+        return os.path.join(
+                tempfile.gettempdir(),
+                "research_assistant_rag",
+                workspace_id
         )
 
+def _project_path(project_name, workspace_id=None):
+        if (
+                not project_name
+                or project_name in {".", ".."}
+                or "/" in project_name
+                or "\\" in project_name
+        ):
+                raise ValueError("Project names cannot contain path separators.")
 
+        return os.path.join(
+                _projects_folder(workspace_id),
+                project_name
+        )
+
+def create_project(project_name, workspace_id=None):
+
+        project_path = _project_path(project_name, workspace_id)
         os.makedirs(
             os.path.join(
                     project_path,
@@ -32,32 +51,29 @@ def create_project(project_name):
             f"Project '{project_name}'created. "
         )
 
-def list_projects():
+def list_projects(workspace_id=None):
         
-        if not os.path.exists(
-                PROJECTS_FOLDER
-        ):
+        projects_folder = _projects_folder(workspace_id)
+
+        if not os.path.exists(projects_folder):
                 
                 return []
         return[
                 folder
                 for folder in os.listdir(
-                        PROJECTS_FOLDER
+                        projects_folder
                 )
                 if os.path.isdir(
                         os.path.join(
-                                PROJECTS_FOLDER,
+                                projects_folder,
                                 folder
                         )
                 )
         ]
 
-def delete_project(project_name):
+def delete_project(project_name, workspace_id=None):
         
-        project_path = os.path.join(
-                PROJECTS_FOLDER,
-                project_name
-        )
+        project_path = _project_path(project_name, workspace_id)
 
         if os.path.exists(
                 project_path
@@ -72,12 +88,9 @@ def delete_project(project_name):
                 )
 
 
-def get_project_paths(project_name):
+def get_project_paths(project_name, workspace_id=None):
         
-        project_path = os.path.join(
-                PROJECTS_FOLDER,
-                project_name
-        )
+        project_path = _project_path(project_name, workspace_id)
 
         pdfs_path = os.path.join(
                 project_path,
@@ -93,11 +106,8 @@ def get_project_paths(project_name):
 
 
 
-def project_exists(project_name):
+def project_exists(project_name, workspace_id=None):
         
         return os.path.exists(
-                os.path.join(
-                        PROJECTS_FOLDER,
-                        project_name
-                )
+                _project_path(project_name, workspace_id)
         )

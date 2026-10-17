@@ -16,9 +16,9 @@ from modules.index_manager import (
 from ui.components.icons import icon_svg
 
 
-def show_projects():
+def show_projects(workspace_id):
 
-    projects = list_projects()
+    projects = list_projects(workspace_id)
 
     total_projects = len(projects)
 
@@ -27,7 +27,8 @@ def show_projects():
     for project in projects:
 
         pdfs_path, _ = get_project_paths(
-            project
+            project,
+            workspace_id
         )
 
         if os.path.exists(pdfs_path):
@@ -103,7 +104,7 @@ def show_projects():
             st.warning("Project already exists.")
 
         else:
-            create_project(new_project)
+            create_project(new_project, workspace_id)
             st.success(f"{new_project} created successfully.")
             st.rerun()
 
@@ -149,7 +150,8 @@ def show_projects():
         for project_index, project in enumerate(filtered_projects):
 
             pdfs_path, storage_path = get_project_paths(
-                project
+                project,
+                workspace_id
             )
 
             pdf_count = 0
@@ -207,7 +209,8 @@ def show_projects():
                 ):
 
                     delete_project(
-                        project
+                        project,
+                        workspace_id
                     )
 
                     st.success(
