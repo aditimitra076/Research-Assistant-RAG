@@ -1,6 +1,7 @@
 import streamlit as st
 
 import os
+from html import escape
 
 from modules.project_manager import(
     get_project_paths
@@ -28,15 +29,16 @@ from ui.components.rag_engine import(
     research_gaps_project
 )
 
+from ui.components.icons import icon_svg
+
 def show_workspace(
         project_name
 ):
     st.markdown(
-        f"## 📁{project_name}"
-    )
-
-    st.caption(
-        "Research Workspace"
+        f'<section class="page-hero"><div class="hero-icon">{icon_svg("folder")}</div>'
+        f'<div><div class="eyebrow">Research workspace</div><h1>{escape(project_name)}</h1>'
+        '<p>Manage papers, refresh the knowledge base, and explore document-grounded answers.</p></div></section>',
+        unsafe_allow_html=True
     )
 
     pdfs_path, storage_path = get_project_paths(
@@ -94,7 +96,7 @@ def show_workspace(
     st.divider()
 
     if st.button(
-        "← Back"
+        "Back to projects"
     ):
        if "selected_project" in st.session_state:
            del st.session_state[
@@ -110,143 +112,75 @@ def show_workspace(
 
     st.divider()
 
-    
+    upload_col, knowledge_col = st.columns(2, gap="large")
 
-    col1, col2 = st.columns(2)
-
-    with col1 :
-
-        st.markdown(
-        "###📄Upload Document"
-    ) 
-
-    uploaded_file = st.file_uploader(
-        "Choose PDF",
-        type=["pdf"]
-    )
-
-    if(
-        uploaded_file
-        and
-        st.button(
-            "Upload PDF"
-        )
-    ):
-        
-        temp_path = uploaded_file.name
-
-        with open(
-            temp_path,
-            "wb"
-        ) as file:
-            
-            file.write(
-                uploaded_file.getbuffer()
-            )
-        upload_pdf(
-            temp_path,
-            project_name
-        )
-
-        st.success(
-            "PDF uploaded successfully"
-        )
-    
-    with col2:
-
-        st.markdown(
-            "###⚡Knowledge Base"
-        )
-
-
-        if st.button(
-            "Rebuild Index"
-        ):
-        
-            success = rebuild_project_index(
-                project_name
+    with upload_col:
+        with st.container(border=True):
+            st.markdown(
+                f'<div class="section-heading">{icon_svg("upload")}<span>Add a research paper</span></div>',
+                unsafe_allow_html=True
             )
 
-            if success:
+            uploaded_file = st.file_uploader(
+                "Choose a PDF",
+                type=["pdf"]
+            )
 
-                st.success(
-                    "Index rebuilt"
-                )
-            else:
-                st.warning(
-                    "No PDFs uploaded in this project."
+            if uploaded_file and st.button("Upload PDF", type="primary"):
+                temp_path = uploaded_file.name
+
+                with open(temp_path, "wb") as file:
+                    file.write(uploaded_file.getbuffer())
+
+                upload_pdf(temp_path, project_name)
+                st.success("PDF uploaded successfully")
+
+    with knowledge_col:
+        with st.container(border=True):
+            st.markdown(
+                f'<div class="section-heading">{icon_svg("layers")}<span>Knowledge base</span></div>',
+                unsafe_allow_html=True
+            )
+
+            if st.button("Rebuild Index"):
+                success = rebuild_project_index(project_name)
+
+                if success:
+                    st.success("Index rebuilt")
+                else:
+                    st.warning("No PDFs uploaded in this project.")
+
+            st.markdown(
+                f'<div class="section-heading">{icon_svg("file")}<span>Paper summary</span></div>',
+                unsafe_allow_html=True
+            )
+
+            if st.button("Generate Summary"):
+                with st.spinner("Generating summary..."):
+                    summary = summarize_project(project_name)
+
+                st.session_state["paper_summary"] = summary
+
+            if "paper_summary" in st.session_state:
+                st.markdown(st.session_state["paper_summary"])
+
+                st.markdown(
+                    f'<div class="section-heading">{icon_svg("search")}<span>Research gap finder</span></div>',
+                    unsafe_allow_html=True
                 )
 
+                if st.button("Find Research Gaps"):
+                    with st.spinner("Analyzing paper..."):
+                        gaps = research_gaps_project(project_name)
 
+                    st.session_state["research_gaps"] = gaps
 
-        st.markdown(
-        "### 📄 Paper Summary"
-    )
-
-    if st.button(
-        "Generate Summary"
-    ):
-
-        with st.spinner(
-            "Generating summary..."
-        ):
-
-            summary = summarize_project(
-                project_name
-            )
-
-        st.session_state[
-            "paper_summary"
-        ] = summary
-
-    if (
-        "paper_summary"
-        in st.session_state
-    ):
-
-        st.markdown(
-            st.session_state[
-                "paper_summary"
-            ]
-        )
-
-
-        st.markdown(
-        "### 🔍 Research Gap Finder"
-    )
-
-    if st.button(
-        "Find Research Gaps"
-    ):
-
-        with st.spinner(
-            "Analyzing paper..."
-        ):
-
-            gaps = research_gaps_project(
-                project_name
-            )
-
-        st.session_state[
-            "research_gaps"
-        ] = gaps
-
-    if (
-        "research_gaps"
-        in st.session_state
-    ):
-
-        st.markdown(
-            st.session_state[
-                "research_gaps"
-            ]
-        )
-
-        
-    st.divider()
+                if "research_gaps" in st.session_state:
+                    st.markdown(st.session_state["research_gaps"])
 
     st.markdown(
-        "### 📚 Documents"
+        f'<div class="section-heading">{icon_svg("file")}<span>Documents</span></div>',
+        unsafe_allow_html=True
     )
 
     pdfs_path, _ = get_project_paths(
@@ -274,26 +208,18 @@ def show_workspace(
         )
     else:
         for pdf in pdf_files:
-
-            col1, col2 = st.columns(
-                [8,1]
+            st.markdown(
+                f'<div class="document-row">{icon_svg("file")}<span>{escape(pdf)}</span></div>',
+                unsafe_allow_html=True
             )
 
-            with col1:
-                st.write(
-                    f"📄{pdf}"
-                )
-            with col2:
-                st.caption(
-                    "PDF"
-                )
-
     st.markdown(
-        "###💬Chat"
+        f'<div class="section-heading">{icon_svg("message")}<span>Chat</span></div>',
+        unsafe_allow_html=True
     )
 
     if st.button(
-        "Open Chat"
+        "Open chat"
     ):
 
         st.session_state[

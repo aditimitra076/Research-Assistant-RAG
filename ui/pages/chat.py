@@ -1,8 +1,11 @@
 import streamlit as st
+from html import escape
 
 from components.rag_engine import(
     ask_project
 )
+
+from ui.components.icons import icon_svg
 
 
 def show_chat(
@@ -10,11 +13,13 @@ def show_chat(
 ):
 
     st.markdown(
-        f"## 💬 {project_name}"
+        f'<div class="chat-heading">{icon_svg("message")}<div><h2>{escape(project_name)}</h2>'
+        '<p>Ask a question grounded in this project’s documents.</p></div></div>',
+        unsafe_allow_html=True
     )
 
     if st.button(
-        "← Back",
+        "Back to workspace",
         key="chat_back"
     ):
 
@@ -48,6 +53,13 @@ def show_chat(
         "project_chats"
     ][project_name]
 
+    if not messages:
+        st.markdown(
+            f'<div class="empty-state">{icon_svg("message")}<div><strong>Your research conversation starts here</strong>'
+            '<p>Ask about the documents in this project. Answers will include retrieved sources when available.</p></div></div>',
+            unsafe_allow_html=True
+        )
+
     for message in messages:
 
         with st.chat_message(
@@ -65,7 +77,7 @@ def show_chat(
             ):
 
                 with st.expander(
-                    "Sources"
+                    "Retrieved sources"
                 ):
 
                     for source in message[
@@ -76,7 +88,7 @@ def show_chat(
                         )
 
     query = st.chat_input(
-        "Ask anything..."
+        "Ask a question about your documents..."
     )
 
     if query:
@@ -109,7 +121,7 @@ def show_chat(
             )
 
             with st.expander(
-                "Sources"
+                "Retrieved sources"
             ):
 
                 for source in sources:
