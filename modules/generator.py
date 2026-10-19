@@ -1,44 +1,70 @@
-from huggingface_hub import InferenceClient
-
 import os
+
 import streamlit as st
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 load_dotenv()
 
-def get_hf_token():
-    token = os.getenv("HF_TOKEN")
-    if token:
-        return token
+MODEL_NAME = "gemini-3.8-flash"
+
+
+def get_gemini_api_key():
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if api_key:
+        return api_key
 
     try:
-        return st.secrets.get("HF_TOKEN")
+        return st.secrets.get("GEMINI_API_KEY")
     except Exception:
         return None
 
 
+def is_gemini_api_key_configured():
+    return bool(get_gemini_api_key())
+
+
+# Compatibility with existing UI code that may call this function.
 def is_hf_token_configured():
-    return bool(get_hf_token())
+    return is_gemini_api_key_configured()
 
 
-def _get_client():
-    token = get_hf_token()
-    if not token:
-        raise RuntimeError("Configure HF_TOKEN to enable Hugging Face inference.")
-    return InferenceClient(api_key=token)
+def _generate(prompt, max_tokens):
+    api_key = get_gemini_api_key()
 
-def generate_answer(
-        context,
-        query
-):
-    prompt =f"""
+    if not api_key:
+        raise RuntimeError(
+            "Configure GEMINI_API_KEY in your .env file or Streamlit Secrets."
+        )
 
-You are an intelligent Researh Assistant.
+    client = genai.Client(api_key=api_key)
+
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            max_output_tokens=max_tokens,
+            temperature=0.2,
+        ),
+    )
+
+    if not response.text:
+        raise RuntimeError(
+            "The model returned an empty response. Please try again."
+        )
+
+    return response.text.strip()
+
+
+def generate_answer(context, query):
+    prompt = f"""
+You are an intelligent Research Assistant.
 
 Answer the user's question using ONLY the provided context.
 
 Rules:
-
 - Never make up facts.
 - If the answer appears in multiple chunks, combine them naturally.
 - Quote titles and author names exactly as written.
@@ -56,27 +82,12 @@ Question:
 
 Answer:
 """
-    
-    response = _get_client().chat_completion(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        messages=[
-            {
-                "role":"user",
-                "content": prompt
-            }
-        ],
-        max_tokens=500
-    )
 
-    return response.choices[0].message.content
+    return _generate(prompt, max_tokens=500)
 
 
-def generate_summary(
-        context
-):
-
+def generate_summary(context):
     prompt = f"""
-
 You are an expert Research Assistant.
 
 Read the research paper context and produce a structured summary.
@@ -111,58 +122,40 @@ If any section is unavailable, write:
 Not available in the document.
 
 Context:
-
 {context}
 
 Summary:
 """
 
-    response = _get_client().chat_completion(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        max_tokens=700
-    )
+    return _generate(prompt, max_tokens=700)
 
-    return response.choices[0].message.content
 
-def generate_research_gaps(
-        context
-):
-
+def generate_research_gaps(context):
     prompt = f"""
-
 You are an expert AI Research Assistant.
 
 Analyze ONLY the provided research paper context.
 
-Identify research gaps, open problems, limitations, and future research directions mentioned or strongly implied by the paper.
+Identify research gaps, open problems, limitations, and future research
+directions mentioned or strongly implied by the paper.
 
 Return the result in this format.
 
 # Research Gaps
-
 - Gap 1
 - Gap 2
 - Gap 3
 
 # Open Problems
-
 - Problem 1
 - Problem 2
 
 # Future Research Directions
-
 - Direction 1
 - Direction 2
 - Direction 3
 
 Rules:
-
 - Use ONLY the provided context.
 - Do NOT invent research gaps.
 - If a section is unavailable, write:
@@ -170,21 +163,9 @@ Rules:
 Not available in the document.
 
 Context:
-
 {context}
 
 Research Gaps:
 """
 
-    response = _get_client().chat_completion(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        max_tokens=700
-    )
-
-    return response.choices[0].message.content
+    return _generate(prompt, max_tokens=700)
