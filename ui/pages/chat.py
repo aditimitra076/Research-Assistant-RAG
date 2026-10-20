@@ -1,5 +1,8 @@
 import streamlit as st
 from html import escape
+from modules.generator import format_generation_error
+
+
 
 from components.rag_engine import(
     ask_project
@@ -115,8 +118,8 @@ def show_chat(
                     query,
                     workspace_id
                 )
-        except Exception:
-            answer = "I could not complete this request. Check the Hugging Face configuration or try again later."
+        except Exception as error:
+            answer = format_generation_error(error)
             sources = []
 
         with st.chat_message(

@@ -16,6 +16,7 @@ from modules.project_indexer import(
     rebuild_project_index
 )
 
+from modules.generator import format_generation_error
 
 from pages.chat import(
     show_chat
@@ -178,8 +179,8 @@ def show_workspace(
                         st.session_state["paper_summary"] = summary
                     else:
                         st.error("The summary could not be generated. Check the inference configuration and try again.")
-                except Exception:
-                    st.error("The summary could not be generated. Check the Hugging Face configuration or try again later.")
+                except Exception as error:
+                    st.error(format_generation_error(error))
 
             if "paper_summary" in st.session_state:
                 st.markdown(st.session_state["paper_summary"])
@@ -198,8 +199,8 @@ def show_workspace(
                             st.session_state["research_gaps"] = gaps
                         else:
                             st.error("Research gaps could not be generated. Check the inference configuration and try again.")
-                    except Exception:
-                        st.error("Research gaps could not be generated. Check the Hugging Face configuration or try again later.")
+                    except Exception as error:
+                        st.error(format_generation_error(error))
 
                 if "research_gaps" in st.session_state:
                     st.markdown(st.session_state["research_gaps"])

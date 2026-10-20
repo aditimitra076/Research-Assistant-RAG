@@ -1,4 +1,5 @@
 import os
+import logging
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -7,7 +8,7 @@ from google.genai import types
 
 load_dotenv()
 
-MODEL_NAME = "gemini-3.8-flash"
+MODEL_NAME = "gemini-3.5-flash-lite"
 
 
 def get_gemini_api_key():
@@ -22,45 +23,68 @@ def get_gemini_api_key():
         return None
 
 
-def is_gemini_api_key_configured():
+def is_api_key_configured():
     return bool(get_gemini_api_key())
 
 
-# Compatibility with existing UI code that may call this function.
-def is_hf_token_configured():
-    return is_gemini_api_key_configured()
+def format_generation_error(error):
+    error_text = str(error)
+
+    if "api_key" in error_text.lower() or "api key" in error_text.lower() or "invalid" in error_text.lower():
+        return (
+            "⚠️ Gemini API key is invalid or missing. "
+            "Get a free key from https://aistudio.google.com/apikey, "
+            "set GEMINI_API_KEY=<your-key> in the .env file, then restart Streamlit."
+        )
+
+    if "quota" in error_text.lower() or "rate" in error_text.lower() or "429" in error_text:
+        return (
+            "⚠️ Gemini free-tier rate limit reached. "
+            "Wait a moment and try again, or check your quota at https://aistudio.google.com."
+        )
+
+    return f"⚠️ Generation failed: {error_text}"
 
 
-def _generate(prompt, max_tokens):
+def _get_client():
     api_key = get_gemini_api_key()
 
     if not api_key:
         raise RuntimeError(
-            "Configure GEMINI_API_KEY in your .env file or Streamlit Secrets."
+            "GEMINI_API_KEY is missing. "
+            "Get a free key from https://aistudio.google.com/apikey and add it to .env."
         )
 
-    client = genai.Client(api_key=api_key)
+    return genai.Client(api_key=api_key)
 
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            max_output_tokens=max_tokens,
-            temperature=0.2,
-        ),
-    )
 
-    if not response.text:
-        raise RuntimeError(
-            "The model returned an empty response. Please try again."
+def _generate(prompt, max_tokens):
+    try:
+        client = _get_client()
+
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                max_output_tokens=max_tokens,
+                temperature=0.2,
+            ),
         )
 
-    return response.text.strip()
+        answer = response.text
+
+        if not answer or not answer.strip():
+            raise RuntimeError("The model returned an empty response.")
+
+        return answer.strip()
+
+    except Exception:
+        logging.exception("Gemini generation failed")
+        raise
 
 
 def generate_answer(context, query):
-    prompt = f"""
-You are an intelligent Research Assistant.
+    prompt = f"""You are an intelligent Research Assistant.
 
 Answer the user's question using ONLY the provided context.
 
@@ -87,8 +111,7 @@ Answer:
 
 
 def generate_summary(context):
-    prompt = f"""
-You are an expert Research Assistant.
+    prompt = f"""You are an expert Research Assistant.
 
 Read the research paper context and produce a structured summary.
 
@@ -131,8 +154,7 @@ Summary:
 
 
 def generate_research_gaps(context):
-    prompt = f"""
-You are an expert AI Research Assistant.
+    prompt = f"""You are an expert AI Research Assistant.
 
 Analyze ONLY the provided research paper context.
 
