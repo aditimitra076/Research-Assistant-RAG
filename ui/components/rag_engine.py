@@ -16,6 +16,33 @@ from modules.generator import(
     generate_research_gaps
 )
 
+MAX_PROJECT_CONTEXT_CHARS = 12000
+
+
+def _get_project_context(chunks):
+    context = ""
+    omitted_chunks = False
+
+    for index, chunk in enumerate(chunks):
+        context += (
+            "\n"
+            f"{chunk['text']}\n"
+        )
+
+        if len(context) > MAX_PROJECT_CONTEXT_CHARS:
+            omitted_chunks = index < len(chunks) - 1
+            break
+
+    if omitted_chunks:
+        context += (
+            "\n[Additional document chunks were omitted because this generation "
+            f"context is limited to approximately {MAX_PROJECT_CONTEXT_CHARS} characters. "
+            "Base the response only on the context included above.]\n"
+        )
+
+    return context
+
+
 def ask_project(
         project_name,
     query,
@@ -96,17 +123,7 @@ def summarize_project(
             "No PDFs uploaded in this project."
         )
 
-    context = ""
-
-    for chunk in chunks:
-
-        context += (
-            "\n"
-            f"{chunk['text']}\n"
-        )
-
-        if len(context) > 12000:
-            break
+    context = _get_project_context(chunks)
 
     summary = generate_summary(
         context
@@ -135,17 +152,7 @@ def research_gaps_project(
             "No PDFs uploaded in this project."
         )
 
-    context = ""
-
-    for chunk in chunks:
-
-        context += (
-            "\n"
-            f"{chunk['text']}\n"
-        )
-
-        if len(context) > 12000:
-            break
+    context = _get_project_context(chunks)
 
     gaps = generate_research_gaps(
         context

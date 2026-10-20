@@ -5,22 +5,32 @@ import streamlit as st
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from google.genai.errors import APIError
+from streamlit.errors import StreamlitSecretNotFoundError
 
 load_dotenv()
 
-MODEL_NAME = "gemini-3.5-flash-lite"
+DEFAULT_MODEL_NAME = "gemini-3.5-flash-lite"
+logger = logging.getLogger(__name__)
+
+
+def _get_streamlit_secret(name):
+    try:
+        return st.secrets.get(name)
+    except (KeyError, StreamlitSecretNotFoundError):
+        return None
 
 
 def get_gemini_api_key():
-    api_key = os.getenv("GEMINI_API_KEY")
+    return os.getenv("GEMINI_API_KEY") or _get_streamlit_secret("GEMINI_API_KEY")
 
-    if api_key:
-        return api_key
 
-    try:
-        return st.secrets.get("GEMINI_API_KEY")
-    except Exception:
-        return None
+def get_gemini_model():
+    return (
+        os.getenv("GEMINI_MODEL")
+        or _get_streamlit_secret("GEMINI_MODEL")
+        or DEFAULT_MODEL_NAME
+    ).strip()
 
 
 def is_api_key_configured():
@@ -28,22 +38,53 @@ def is_api_key_configured():
 
 
 def format_generation_error(error):
-    error_text = str(error)
+    error_text = str(getattr(error, "message", error)).lower()
+    status_code = getattr(error, "code", None)
 
-    if "api_key" in error_text.lower() or "api key" in error_text.lower() or "invalid" in error_text.lower():
+    if "gemini_api_key is missing" in error_text:
         return (
-            "⚠️ Gemini API key is invalid or missing. "
-            "Get a free key from https://aistudio.google.com/apikey, "
-            "set GEMINI_API_KEY=<your-key> in the .env file, then restart Streamlit."
+            "Gemini API key is not configured. Set GEMINI_API_KEY in the local .env "
+            "file or Streamlit Secrets."
         )
 
-    if "quota" in error_text.lower() or "rate" in error_text.lower() or "429" in error_text:
+    if (
+        status_code == 401
+        or "unauthenticated" in error_text
+        or "invalid api key" in error_text
+        or "api_key_invalid" in error_text
+        or "api key not valid" in error_text
+    ):
         return (
-            "⚠️ Gemini free-tier rate limit reached. "
-            "Wait a moment and try again, or check your quota at https://aistudio.google.com."
+            "Gemini authentication failed. Check that GEMINI_API_KEY is valid and "
+            "belongs to the intended Google AI Studio project."
         )
 
-    return f"⚠️ Generation failed: {error_text}"
+    if status_code == 429 or any(
+        term in error_text
+        for term in ("resource_exhausted", "quota", "rate limit")
+    ):
+        return (
+            "Gemini returned a quota or rate-limit error. Check this project's "
+            "model-specific RPM, TPM, RPD, and tier in Google AI Studio; the error "
+            "does not identify which limit was reached. The app does not retry "
+            "generation requests automatically."
+        )
+
+    if (
+        status_code in (403, 404)
+        or "model not found" in error_text
+        or "model is unavailable" in error_text
+    ):
+        return (
+            "Gemini denied access to the configured model. Check GEMINI_MODEL, "
+            "the selected Google AI Studio project, and that the model is available "
+            "to that project."
+        )
+
+    return (
+        "Gemini generation failed. Check the application log for the sanitized "
+        "technical error and verify the model and project configuration."
+    )
 
 
 def _get_client():
@@ -51,25 +92,57 @@ def _get_client():
 
     if not api_key:
         raise RuntimeError(
-            "GEMINI_API_KEY is missing. "
-            "Get a free key from https://aistudio.google.com/apikey and add it to .env."
+            "GEMINI_API_KEY is missing. Add it to the local .env file or Streamlit Secrets."
         )
 
-    return genai.Client(api_key=api_key)
+    return genai.Client(
+        api_key=api_key,
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(attempts=1)
+        ),
+    )
+
+
+def _log_generation_error(error, model, api_key):
+    if isinstance(error, APIError):
+        detail = (
+            error.message.replace(api_key, "[REDACTED_API_KEY]")
+            if api_key
+            else error.message
+        )
+        logger.error(
+            "Gemini generation failed: model=%s status=%s error=%s",
+            model,
+            error.code,
+            detail,
+        )
+        return
+
+    logger.error(
+        "Gemini generation failed: model=%s error_type=%s",
+        model,
+        type(error).__name__,
+    )
 
 
 def _generate(prompt, max_tokens):
+    api_key = get_gemini_api_key()
+    model = get_gemini_model()
+
     try:
         client = _get_client()
 
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                max_output_tokens=max_tokens,
-                temperature=0.2,
-            ),
-        )
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=max_tokens,
+                    temperature=0.2,
+                ),
+            )
+        finally:
+            client.close()
 
         answer = response.text
 
@@ -78,8 +151,8 @@ def _generate(prompt, max_tokens):
 
         return answer.strip()
 
-    except Exception:
-        logging.exception("Gemini generation failed")
+    except Exception as error:
+        _log_generation_error(error, model, api_key)
         raise
 
 

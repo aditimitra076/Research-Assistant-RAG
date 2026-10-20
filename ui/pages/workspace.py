@@ -178,7 +178,7 @@ def show_workspace(
                     if summary:
                         st.session_state["paper_summary"] = summary
                     else:
-                        st.error("The summary could not be generated. Check the inference configuration and try again.")
+                        st.error("Gemini returned no summary. Check the application log and try again.")
                 except Exception as error:
                     st.error(format_generation_error(error))
 
@@ -198,7 +198,7 @@ def show_workspace(
                         if gaps:
                             st.session_state["research_gaps"] = gaps
                         else:
-                            st.error("Research gaps could not be generated. Check the inference configuration and try again.")
+                            st.error("Gemini returned no research-gap analysis. Check the application log and try again.")
                     except Exception as error:
                         st.error(format_generation_error(error))
 
